@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Warranty</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+    table, th, td {
+        margin-top: 50px;
+        margin-left: auto;
+        margin-right: auto;
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 5px;
+    }
+</style>
+
+</head>
+
+<body>
+    <input type="file" id="file-input" />
+    <button id="read-button">Read File</button>
+    <button id="update-table" onclick = "fetchToRemove()">Fetch Rows to Remove</button>
+    <button id="new-table" onclick = "updateTable()">Get Updated Table</button>
+
+    <table id = "main_table">
+        <tr>
+          <th>WORK ORDER</th>
+          <th>DATE</th>
+          <th>PART NUMBER</th>
+        </tr>
+      </table>
+
+</body>
+
+<script>
+
+    const date = new Date()
+    // const date = new Date("2025/01/21")
+
+    var good = ""
+
+
+    //why is this anon func
+    document.querySelector("#read-button").addEventListener('click', function() {
+		let file = document.querySelector("#file-input").files[0];
+		let reader = new FileReader();
+        var text = ""; //why global
+
+		reader.addEventListener('load', function(e) {
+            text = e.target.result;
+            populateTable(extractDataToArray(text));
+		});
+		reader.readAsText(file);
+	});
+
+
+    function extractDataToArray(text){
+        var data = [];
+        var temp_string = "";
+        for(var i=0; i<text.length; i++){
+            if(text.charAt(i)!="*")
+                temp_string+=text.charAt(i);
+            else {
+                data.push(temp_string);
+                temp_string="";
+            }
+        }
+        return data;
+    }
+
+    function populateTable(data){
+        var tableRow = document.getElementById("main_table");
+        for(var i=0; i<data.length; i++){
+            var d = data[i].split(",")
+            var row = document.createElement("tr");
+
+            for(var j=0; j<d.length; j++){
+                if(j==1){
+                    var new_date = new Date(d[j])
+                    new_date.setMonth(new_date.getMonth()+6)
+                    if(new_date<date) row.style.backgroundColor = "red";
+                }
+
+
+                var cell = document.createElement("td");
+                cell.innerHTML = d[j];
+                row.appendChild(cell);
+            }
+            if(row.style.backgroundColor!="red"){
+                row.innerHTML+="<td><button id="+i+" onclick='colorRow(this)'>Select</button></td>"
+                //so the row doesnt mismatch the btn 
+                row.setAttribute("id", "row_"+i)
+            }
+
+            tableRow.appendChild(row);
+        }
+    }
+
+    function colorRow(t){
+        //improve this 
+        var row_selected = document.getElementById("row_"+t.id)
+        if(row_selected.style.backgroundColor!="red") {
+            row_selected.style.backgroundColor = "red"
+            t.innerText = "Undo"
+        }
+        else {
+            row_selected.style.backgroundColor = "white"
+            t.innerText = "Select"
+        }
+    }
+
+    function fetchToRemove(){
+        var table = document.getElementById("main_table")
+        var temp = ""
+        good = ""
+
+        //isolate col loop later
+        for (var i = 0, row; row = table.rows[i]; i++) {
+
+
+            if(row.style.backgroundColor == "red"){
+                for (var j = 0, col; col = row.cells[j]; j++) {
+                    //pointer
+                    if(j==2){
+                        temp+=col.innerText+'\n'
+                        break;
+                    }
+                    temp+=col.innerText+", "
+                }
+            }
+
+
+            else {
+                if(row.innerText.charAt(0)!="W"&&row.innerText.charAt(0)!=""){
+                        for (var j = 0, col; col = row.cells[j]; j++) {
+                        if(j==2){
+                            good+=col.innerText+'*\n'
+                            break;
+                        }
+                        good+=col.innerText+", "
+                    }
+                }
+            }
+        }
+        console.log(temp)
+    }
+
+    function updateTable(){
+        console.log(good)
+    }
+ 
+</script>
+</html>
